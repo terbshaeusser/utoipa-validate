@@ -1,0 +1,11 @@
+[package]
+name = "utoipa-validate"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1.9.5"
+utoipa-validate-gen = { path = "../utoipa-validate-gen" }
+
+[dev-dependencies]
+utoipa = "3.5.0"
