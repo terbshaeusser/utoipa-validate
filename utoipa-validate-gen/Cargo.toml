@@ -1,5 +1,8 @@
 [package]
 name = "utoipa-validate-gen"
+description = "Helper crate for utoipa-validate that defines the Validatable derive macro."
+authors = ["Tobias Erbshäußer <tobias.erbshaeusser@gmail.com>"]
+license = "MIT OR Apache-2.0"
 version = "0.1.0"
 edition = "2021"
 

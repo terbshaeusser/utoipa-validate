@@ -210,7 +210,7 @@ fn create_checks_for_field(
         {
             let child_path = #field_path;
 
-            <#field_type as utoipa_validate::Validatable>::validate_default(&#field_expr, &child_path, errors);
+            <#field_type as utoipa_validate::Validatable>::validate_ex(&#field_expr, &child_path, errors);
             #(#checks)*
         }
     }
@@ -277,6 +277,13 @@ fn create_checks_for_schema_attribute(
 
                 Some(quote! {
                     utoipa_validate::MinLengthValidator::new(#value)
+                })
+            }
+            Meta::NameValue(MetaNameValue { path, eq_token, value }) if path.is_ident("multiple_of") => {
+                let _ = eq_token;
+
+                Some(quote! {
+                    utoipa_validate::MultipleOfValidator::new(#value)
                 })
             }
             Meta::NameValue(MetaNameValue { path, eq_token, value }) if path.is_ident("pattern") => {

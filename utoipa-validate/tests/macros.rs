@@ -1,6 +1,5 @@
 use utoipa::ToSchema;
-use utoipa_validate::{Validatable, ValidationError};
-use utoipa_validate_gen::Validatable;
+use utoipa_validate::{Validatable, ValidationError, ValidationErrorCategory};
 
 #[derive(ToSchema, Validatable)]
 struct IntegerFields {
@@ -16,7 +15,7 @@ struct IntegerFields {
     pub unsigned8: u8,
     #[schema(minimum = 2, maximum = 16)]
     pub unsigned16: u16,
-    #[schema(minimum = 3, maximum = 19)]
+    #[schema(multiple_of = 2)]
     pub unsigned32: u32,
     #[schema(exclusive_minimum = 4, exclusive_maximum = 6)]
     pub unsigned64: u64,
@@ -31,10 +30,10 @@ fn valid_integer_fields() {
         signed64: -3,
         unsigned8: 1,
         unsigned16: 2,
-        unsigned32: 3,
+        unsigned32: 2,
         unsigned64: 5,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 
@@ -45,10 +44,10 @@ fn valid_integer_fields() {
         signed64: 7,
         unsigned8: 3,
         unsigned16: 12,
-        unsigned32: 14,
+        unsigned32: 0,
         unsigned64: 5,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 }
@@ -62,76 +61,84 @@ fn invalid_integer_fields() {
         signed64: -4,
         unsigned8: 0,
         unsigned16: 1,
-        unsigned32: 2,
+        unsigned32: 1,
         unsigned64: 4,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 8);
     assert_eq!(
         error[0],
-        ValidationError::Minimum {
-            field: "signed8".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "signed8".to_owned(),
             actual: "-2".to_owned(),
-            minimum: "-1".to_owned(),
+            expected: "-1".to_owned(),
         }
     );
     assert_eq!(
         error[1],
-        ValidationError::Minimum {
-            field: "signed16".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "signed16".to_owned(),
             actual: "-3".to_owned(),
-            minimum: "-2".to_owned(),
+            expected: "-2".to_owned(),
         }
     );
     assert_eq!(
         error[2],
-        ValidationError::Minimum {
-            field: "signed32".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "signed32".to_owned(),
             actual: "-4".to_owned(),
-            minimum: "-3".to_owned(),
+            expected: "-3".to_owned(),
         }
     );
     assert_eq!(
         error[3],
-        ValidationError::ExclusiveMinimum {
-            field: "signed64".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::ExclusiveMinimum,
+            path: "signed64".to_owned(),
             actual: "-4".to_owned(),
-            minimum: "-4".to_owned(),
+            expected: "-4".to_owned(),
         }
     );
     assert_eq!(
         error[4],
-        ValidationError::Minimum {
-            field: "unsigned8".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "unsigned8".to_owned(),
             actual: "0".to_owned(),
-            minimum: "1".to_owned(),
+            expected: "1".to_owned(),
         }
     );
     assert_eq!(
         error[5],
-        ValidationError::Minimum {
-            field: "unsigned16".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "unsigned16".to_owned(),
             actual: "1".to_owned(),
-            minimum: "2".to_owned(),
+            expected: "2".to_owned(),
         }
     );
     assert_eq!(
         error[6],
-        ValidationError::Minimum {
-            field: "unsigned32".to_owned(),
-            actual: "2".to_owned(),
-            minimum: "3".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::MultipleOf,
+            path: "unsigned32".to_owned(),
+            actual: "1".to_owned(),
+            expected: "2".to_owned(),
         }
     );
     assert_eq!(
         error[7],
-        ValidationError::ExclusiveMinimum {
-            field: "unsigned64".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::ExclusiveMinimum,
+            path: "unsigned64".to_owned(),
             actual: "4".to_owned(),
-            minimum: "4".to_owned(),
+            expected: "4".to_owned(),
         }
     );
 
@@ -142,76 +149,84 @@ fn invalid_integer_fields() {
         signed64: 8,
         unsigned8: 7,
         unsigned16: 17,
-        unsigned32: 20,
+        unsigned32: 3,
         unsigned64: 6,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 8);
     assert_eq!(
         error[0],
-        ValidationError::Maximum {
-            field: "signed8".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Maximum,
+            path: "signed8".to_owned(),
             actual: "4".to_owned(),
-            maximum: "3".to_owned(),
+            expected: "3".to_owned(),
         }
     );
     assert_eq!(
         error[1],
-        ValidationError::Maximum {
-            field: "signed16".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Maximum,
+            path: "signed16".to_owned(),
             actual: "13".to_owned(),
-            maximum: "12".to_owned(),
+            expected: "12".to_owned(),
         }
     );
     assert_eq!(
         error[2],
-        ValidationError::Maximum {
-            field: "signed32".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Maximum,
+            path: "signed32".to_owned(),
             actual: "15".to_owned(),
-            maximum: "14".to_owned(),
+            expected: "14".to_owned(),
         }
     );
     assert_eq!(
         error[3],
-        ValidationError::ExclusiveMaximum {
-            field: "signed64".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::ExclusiveMaximum,
+            path: "signed64".to_owned(),
             actual: "8".to_owned(),
-            maximum: "8".to_owned(),
+            expected: "8".to_owned(),
         }
     );
     assert_eq!(
         error[4],
-        ValidationError::Maximum {
-            field: "unsigned8".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Maximum,
+            path: "unsigned8".to_owned(),
             actual: "7".to_owned(),
-            maximum: "6".to_owned(),
+            expected: "6".to_owned(),
         }
     );
     assert_eq!(
         error[5],
-        ValidationError::Maximum {
-            field: "unsigned16".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Maximum,
+            path: "unsigned16".to_owned(),
             actual: "17".to_owned(),
-            maximum: "16".to_owned(),
+            expected: "16".to_owned(),
         }
     );
     assert_eq!(
         error[6],
-        ValidationError::Maximum {
-            field: "unsigned32".to_owned(),
-            actual: "20".to_owned(),
-            maximum: "19".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::MultipleOf,
+            path: "unsigned32".to_owned(),
+            actual: "3".to_owned(),
+            expected: "2".to_owned(),
         }
     );
     assert_eq!(
         error[7],
-        ValidationError::ExclusiveMaximum {
-            field: "unsigned64".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::ExclusiveMaximum,
+            path: "unsigned64".to_owned(),
             actual: "6".to_owned(),
-            maximum: "6".to_owned(),
+            expected: "6".to_owned(),
         }
     );
 }
@@ -230,7 +245,7 @@ fn valid_float_fields() {
         float32: 1.0,
         float64: -0.49,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 
@@ -238,7 +253,7 @@ fn valid_float_fields() {
         float32: 2.9,
         float64: 0.0,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 }
@@ -249,25 +264,27 @@ fn invalid_float_fields() {
         float32: 0.9,
         float64: -0.5,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 2);
     assert_eq!(
         error[0],
-        ValidationError::Minimum {
-            field: "float32".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "float32".to_owned(),
             actual: "0.9".to_owned(),
-            minimum: "1".to_owned(),
+            expected: "1".to_owned(),
         }
     );
     assert_eq!(
         error[1],
-        ValidationError::ExclusiveMinimum {
-            field: "float64".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::ExclusiveMinimum,
+            path: "float64".to_owned(),
             actual: "-0.5".to_owned(),
-            minimum: "-0.5".to_owned(),
+            expected: "-0.5".to_owned(),
         }
     );
 
@@ -275,25 +292,27 @@ fn invalid_float_fields() {
         float32: 3.0,
         float64: 0.1,
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 2);
     assert_eq!(
         error[0],
-        ValidationError::ExclusiveMaximum {
-            field: "float32".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::ExclusiveMaximum,
+            path: "float32".to_owned(),
             actual: "3".to_owned(),
-            maximum: "3".to_owned(),
+            expected: "3".to_owned(),
         }
     );
     assert_eq!(
         error[1],
-        ValidationError::Maximum {
-            field: "float64".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Maximum,
+            path: "float64".to_owned(),
             actual: "0.1".to_owned(),
-            maximum: "0".to_owned(),
+            expected: "0".to_owned(),
         }
     );
 }
@@ -312,7 +331,7 @@ fn valid_string_fields() {
         s: "1".to_owned(),
         hex: "deef".to_owned(),
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 
@@ -320,7 +339,7 @@ fn valid_string_fields() {
         s: "12345".to_owned(),
         hex: "bee138".to_owned(),
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 }
@@ -331,25 +350,27 @@ fn invalid_string_fields() {
         s: "".to_owned(),
         hex: "".to_owned(),
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 2);
     assert_eq!(
         error[0],
-        ValidationError::MinLength {
-            field: "s".to_owned(),
-            actual: 0,
-            min_length: 1,
+        ValidationError {
+            category: ValidationErrorCategory::MinLength,
+            path: "s".to_owned(),
+            actual: "0".to_owned(),
+            expected: "1".to_owned(),
         }
     );
     assert_eq!(
         error[1],
-        ValidationError::Pattern {
-            field: "hex".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Pattern,
+            path: "hex".to_owned(),
             actual: "".to_owned(),
-            pattern: "^[0-9a-f]+$".to_owned(),
+            expected: "^[0-9a-f]+$".to_owned(),
         }
     );
 
@@ -357,25 +378,27 @@ fn invalid_string_fields() {
         s: "123456".to_owned(),
         hex: "abz".to_owned(),
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 2);
     assert_eq!(
         error[0],
-        ValidationError::MaxLength {
-            field: "s".to_owned(),
-            actual: 6,
-            max_length: 5,
+        ValidationError {
+            category: ValidationErrorCategory::MaxLength,
+            path: "s".to_owned(),
+            actual: "6".to_owned(),
+            expected: "5".to_owned(),
         }
     );
     assert_eq!(
         error[1],
-        ValidationError::Pattern {
-            field: "hex".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Pattern,
+            path: "hex".to_owned(),
             actual: "abz".to_owned(),
-            pattern: "^[0-9a-f]+$".to_owned(),
+            expected: "^[0-9a-f]+$".to_owned(),
         }
     );
 }
@@ -403,10 +426,11 @@ fn invalid_unnamed_option() {
     assert_eq!(error.len(), 1);
     assert_eq!(
         error[0],
-        ValidationError::Minimum {
-            field: "0".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "0".to_owned(),
             actual: "2".to_owned(),
-            minimum: "3".to_owned(),
+            expected: "3".to_owned(),
         }
     );
 }
@@ -434,10 +458,11 @@ fn invalid_unnamed_vec() {
     assert_eq!(error.len(), 1);
     assert_eq!(
         error[0],
-        ValidationError::MinItems {
-            field: "0".to_owned(),
-            actual: 0,
-            min_items: 1,
+        ValidationError {
+            category: ValidationErrorCategory::MinItems,
+            path: "0".to_owned(),
+            actual: "0".to_owned(),
+            expected: "1".to_owned(),
         }
     );
 
@@ -448,10 +473,11 @@ fn invalid_unnamed_vec() {
     assert_eq!(error.len(), 1);
     assert_eq!(
         error[0],
-        ValidationError::MaxItems {
-            field: "0".to_owned(),
-            actual: 4,
-            max_items: 3,
+        ValidationError {
+            category: ValidationErrorCategory::MaxItems,
+            path: "0".to_owned(),
+            actual: "4".to_owned(),
+            expected: "3".to_owned(),
         }
     );
 }
@@ -490,10 +516,11 @@ fn invalid_enum() {
     assert_eq!(error.len(), 1);
     assert_eq!(
         error[0],
-        ValidationError::Minimum {
-            field: "A.one".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "A.one".to_owned(),
             actual: "0".to_owned(),
-            minimum: "1".to_owned(),
+            expected: "1".to_owned(),
         }
     );
 
@@ -504,10 +531,11 @@ fn invalid_enum() {
     assert_eq!(error.len(), 1);
     assert_eq!(
         error[0],
-        ValidationError::Minimum {
-            field: "B._0".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "B._0".to_owned(),
             actual: "0".to_owned(),
-            minimum: "1".to_owned(),
+            expected: "1".to_owned(),
         }
     );
 }
@@ -522,7 +550,7 @@ fn valid_nested() {
     let result = Nested {
         o: UnnamedOption(Some(4)),
     }
-        .validate();
+    .validate();
 
     assert!(result.is_ok());
 }
@@ -532,17 +560,18 @@ fn invalid_nested() {
     let result = Nested {
         o: UnnamedOption(Some(2)),
     }
-        .validate();
+    .validate();
 
     assert!(result.is_err());
     let error = result.unwrap_err();
     assert_eq!(error.len(), 1);
     assert_eq!(
         error[0],
-        ValidationError::Minimum {
-            field: "o.0".to_owned(),
+        ValidationError {
+            category: ValidationErrorCategory::Minimum,
+            path: "o.0".to_owned(),
             actual: "2".to_owned(),
-            minimum: "3".to_owned(),
+            expected: "3".to_owned(),
         }
     );
 }
