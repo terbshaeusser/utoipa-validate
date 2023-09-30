@@ -199,7 +199,7 @@ fn create_checks_for_field(
     let is_option = is_option(&field_type);
 
     let checks = field.attrs.into_iter().map(|attribute| {
-        if attribute.path().is_ident("schema") {
+        if attribute.path().is_ident("schema") || attribute.path().is_ident("param") {
             create_checks_for_schema_attribute(&field_expr, is_option, attribute)
         } else {
             quote!()
